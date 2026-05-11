@@ -5,7 +5,7 @@ import os
 
 app = Flask(__name__)
 
-API_KEYS = ["MR19"]
+API_KEY = "SABBIR"
 
 
 @app.route("/")
@@ -18,42 +18,56 @@ def home():
 
 @app.route("/like")
 def like():
-    uid = request.args.get("uid")
-    server = request.args.get("server_name", "bd")
-    key = request.args.get("key")
 
-    if key not in API_KEYS:
-        return jsonify({"status": "error", "message": "Invalid API Key"})
+    uid = request.args.get("uid")
+    server = request.args.get("server_name", "BD")
 
     if not uid:
-        return jsonify({"status": "error", "message": "UID Missing"})
+        return jsonify({
+            "status": "error",
+            "message": "UID Missing"
+        })
 
     try:
-        # ORIGINAL API CALL
-        api_url = f"https://silent-vip-like-api.up.railway.app/like?uid={uid}&server_name={server}&key=MR19"
+
+        # ORIGINAL API
+        api_url = (
+            f"https://sabbir-codex-like.vercel.app/"
+            f"like?uid={uid}&server_name={server}&key={API_KEY}"
+        )
+
         response = requests.get(api_url, timeout=10)
         data = response.json()
 
-        # BEFORE LIKE (original API)
+        # ORIGINAL VALUES
         before_like = int(data.get("LikesbeforeCommand", 0))
-
-        # API LIKE (original)
         api_like = int(data.get("LikesGivenByAPI", 0))
 
-        # AFTER LIKE (calculated)
-        after_like = before_like + api_like
+        # EXTRA LIKE
+        extra_like = 100
+
+        # FINAL LIKE
+        total_added = api_like + extra_like
+        after_like = before_like + total_added
 
         return jsonify({
-            "status": "success",
-            "uid": uid,
-            "server": server.upper(),
-            "player_name": data.get("PlayerNickname", "UNKNOWN"),
 
-            "before_like": before_like,
-            "api_like": api_like,
-            "after_like": after_like,
+            "PlayerNickname": data.get("PlayerNickname", "UNKNOWN"),
+
+            "UID": uid,
+
+            "LikesbeforeCommand": before_like,
+
+            "LikesGivenByAPI": total_added,
+
+            "LikesafterCommand": after_like,
+
+            "remains": data.get("remains", "(90/90)"),
+
+            "status": data.get("status", 2),
 
             "developer": "Jihad X Codex",
+
             "time": datetime.now().strftime("%d-%m-%Y %I:%M:%S %p")
         })
 
